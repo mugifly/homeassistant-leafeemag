@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensor
 
 # Import constants
 # https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/const.py
-from homeassistant.const import CONF_NAME, CONF_MAC
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_MAC, CONF_NAME
 
 # Import classes for validation
 import voluptuous as vol
@@ -26,6 +26,7 @@ REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
 # Define the validation of configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS, default='window'): cv.string,
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -47,9 +48,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ble_adapter = pygatt.GATTToolBackend()
 
     mac_address = config[CONF_MAC]
+
+    device_class = config.get(CONF_DEVICE_CLASS)
     name = config.get(CONF_NAME)
 
-    add_devices([MagBinarySensor(ble_adapter, mac_address, name)])
+    add_devices([MagBinarySensor(ble_adapter, mac_address, device_class, name)])
 
 def _on_notification_received_from_mag(instance, handle, value) -> None:
     """This method will be called when the state of Mag changes."""
@@ -62,15 +65,16 @@ def _on_notification_received_from_mag(instance, handle, value) -> None:
 
 class MagBinarySensor(BinarySensorDevice):
 
-    def __init__(self, ble_adapter, mac_address, name = None) -> None:
+    def __init__(self, ble_adapter, mac_address, device_class, name = None) -> None:
         """Initialzing binary sensor for Mag...."""
 
         # Initialize
-        self._name = name if name != None else mac_address
+        self._ble_adapter = ble_adapter
         self._mac_address = mac_address.upper()
+        self._device_class = device_class
+        self._name = name if name != None else mac_address
         self._state = None
         self._last_connected_at = 0
-        self._ble_adapter = ble_adapter
 
         # Scan and Subscribe
         self._mag_device = None
@@ -80,6 +84,11 @@ class MagBinarySensor(BinarySensorDevice):
     def name(self) -> str:
         """Return the name of this sensor."""
         return self._name
+
+    @property
+    def device_class(self):
+        """Return the device class of this sensor."""
+        return self._device_class
 
     @property
     def is_on(self) -> bool:

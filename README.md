@@ -51,8 +51,9 @@ In `configuration.yaml`:
 ```
 binary_sensor:
   - platform: leafeemag
-    name: 'Window of Living'
     mac: 'xx:xx:xx:xx:xx:xx'
+    name: 'Window of Living'
+    device_class: 'door'
     scan_interval: 10
 ```
 
