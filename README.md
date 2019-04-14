@@ -57,6 +57,16 @@ binary_sensor:
     scan_interval: 10
 ```
 
+* `platform` (**Required**)  -  It must be `leafeemag`.
+
+* `mac` (**Required**)  -  MAC address of your leafee mag.
+
+* `name` (Optional)  - Name of this sensor. In typically it should be name of door or window.
+
+* `device_class` (Optional)  -  Class of this sensor. You can display the icon to the dashboard by setting this value, such as  `door`,  `window` and others. A list of available values is [here](https://www.home-assistant.io/components/binary_sensor/#device-class).
+
+* `scan_interval` (Optional)  -  Interval (seconds) to update the sensor status on Home Assistant. <br>NOTE: Regardless of this setting, reception of sensor status from leafee mag is performed in real-time via Notification system of BLE.
+
 Also it supports multiple sensors. I tested using 4 sensors.
 
 ### 3. Restart Home Assistant
