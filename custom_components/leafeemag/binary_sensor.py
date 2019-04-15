@@ -128,32 +128,7 @@ class MagBinarySensor(BinarySensorDevice):
         try:
             ble_adapter.start(False)
         except Exception as error:
-            _LOGGER.debug('Error occurred during initializing however ignored: %s.', error)
-
-        # Scan BLE devices
-        scanned_mag_device = None
-        _LOGGER.debug('Scanning BLE devices...')
-
-        try:
-
-            ble_devices = ble_adapter.scan(BLE_SCAN_TIMEOUT_SEC)
-
-            for device in ble_devices:
-
-                if 'address' not in device:
-                    continue
-
-                if (device['address'] == self._mac_address):
-                    scanned_mag_device = device
-                    break
-
-        except Exception as error:
-            _LOGGER.error('Error occurred during scanning: %s; Waiting for retry...', error)
-            return False
-
-        if scanned_mag_device == None:
-            _LOGGER.debug('Mag was not found: %s; Waiting for retry...', self._mac_address)
-            return False
+            _LOGGER.debug('Error occurred during initializing: %s; However ignored.', error)
 
         # Connect to device
         _LOGGER.debug('Connecting to Mag... %s', self._mac_address)
