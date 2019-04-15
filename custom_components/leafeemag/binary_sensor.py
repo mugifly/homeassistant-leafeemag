@@ -44,15 +44,12 @@ SENSOR_CHARACTERISTIC_UUID = '3c113000-c75c-50c4-1f1a-6789e2afde4e'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup platform."""
 
-    import pygatt
-    ble_adapter = pygatt.GATTToolBackend()
-
     mac_address = config[CONF_MAC]
 
     device_class = config.get(CONF_DEVICE_CLASS)
     name = config.get(CONF_NAME)
 
-    add_devices([MagBinarySensor(ble_adapter, mac_address, device_class, name)])
+    add_devices([MagBinarySensor(mac_address, device_class, name)])
 
 def _on_notification_received_from_mag(instance, handle, value) -> None:
     """This method will be called when the state of Mag changes."""
@@ -62,11 +59,10 @@ def _on_notification_received_from_mag(instance, handle, value) -> None:
 
 class MagBinarySensor(BinarySensorDevice):
 
-    def __init__(self, ble_adapter, mac_address, device_class, name = None) -> None:
+    def __init__(self, mac_address, device_class, name = None) -> None:
         """Initialzing binary sensor for Mag...."""
 
         # Initialize
-        self._ble_adapter = ble_adapter
         self._mac_address = mac_address.upper()
         self._device_class = device_class
         self._name = name if name != None else mac_address
