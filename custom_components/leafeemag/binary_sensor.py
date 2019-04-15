@@ -34,11 +34,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _LOGGER = logging.getLogger(__name__)
 
 # Define constants
-BLE_SCAN_TIMEOUT_SEC = 10
 BLE_CONNECT_TIMEOUT_SEC = 10
+BLE_READ_TIMEOUT_SEC = 10
 CONNECT_ERROR_RETRY_INTERVAL_SEC = 30
 RECONNECT_INTERVAL_SEC = 7200
-SENSOR_CHARACTERISTIC_UUID = '3c113000c75c50c41f1a6789e2afde4e'
+SENSOR_CHARACTERISTIC_UUID = '3c113000-c75c-50c4-1f1a-6789e2afde4e'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -137,15 +137,30 @@ class MagBinarySensor(BinarySensorDevice):
         try:
             self._mag_device = ble_adapter.connect(self._mac_address, BLE_CONNECT_TIMEOUT_SEC, pygatt.BLEAddressType.public)
         except Exception as error:
-            _LOGGER.error('Error occurred during connecting: %s; Waiting for retry...', error)
+            _LOGGER.error('Error occurred during connecting to %s: %s; Waiting for retry...', self._mac_address, error)
             return False
+
+        # Get latest state
+        _LOGGER.debug('Getting latest state... %s', self._mac_address)
+        try:
+
+            value = self._mag_device.char_read('3c113000-c75c-50c4-1f1a-6789e2afde4e', BLE_READ_TIMEOUT_SEC)
+            _LOGGER.debug('Getting latest state... %s %s %s', self._mac_address, self._mag_device, value)
+
+            if value.decode() == '\x00': # Opened
+                self._set_state(True)
+            else: # Closed
+                self._set_state(False)
+
+        except Exception as error:
+            _LOGGER.warning('Error occurred during getting latest state from %s: %s; However ignored.', self._mac_address, error)
 
         # Subscribe to notifications for state changes
         _LOGGER.debug('Subscribing notification... %s', self._mac_address)
         try:
             self._mag_device.subscribe(SENSOR_CHARACTERISTIC_UUID, lambda handle, value: _on_notification_received_from_mag(self, handle, value))
         except Exception as error:
-            _LOGGER.error('Error occurred during subscribing: %s; Waiting for retry...', error)
+            _LOGGER.error('Error occurred during subscribing with %s: %s; Waiting for retry...', self._mac_address, error)
             return False
 
         # Done
