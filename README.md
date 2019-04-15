@@ -85,6 +85,19 @@ It may take few minutes to display the latest status by this component after Hom
 It's no problem.
 This component will try again in a few minutes.
 
+### How to check the debug log
+
+Firstly, you need to specifying the log level for this component, in configuration.yaml on Home Assistant.
+
+```
+logger:
+  default: warning
+  logs:
+    custom_components.leafeemag.binary_sensor: debug
+```
+
+After saving and restarting, then open the "Info" page of your Home Assistant (http://example.com/dev-info) on the browser, and click the "LOAD FULL HOME ASSISTANT LOG" button.
+
 
 ----
 
