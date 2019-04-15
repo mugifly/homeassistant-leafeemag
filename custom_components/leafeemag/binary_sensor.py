@@ -57,10 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 def _on_notification_received_from_mag(instance, handle, value) -> None:
     """This method will be called when the state of Mag changes."""
 
-    if value.decode() == '\x00': # Opened
-        instance._set_state(True)
-    else: # Closed
-        instance._set_state(False)
+    instance._set_state_by_received_bytearray(value)
 
 
 class MagBinarySensor(BinarySensorDevice):
@@ -145,12 +142,7 @@ class MagBinarySensor(BinarySensorDevice):
         try:
 
             value = self._mag_device.char_read('3c113000-c75c-50c4-1f1a-6789e2afde4e', BLE_READ_TIMEOUT_SEC)
-            _LOGGER.debug('Getting latest state... %s %s %s', self._mac_address, self._mag_device, value)
-
-            if value.decode() == '\x00': # Opened
-                self._set_state(True)
-            else: # Closed
-                self._set_state(False)
+            self._set_state_by_received_bytearray(value)
 
         except Exception as error:
             _LOGGER.warning('Error occurred during getting latest state from %s: %s; However ignored.', self._mac_address, error)
@@ -167,8 +159,14 @@ class MagBinarySensor(BinarySensorDevice):
         _LOGGER.info('Ready for detect changing: %s', self._mac_address)
         return True
 
-    def _set_state (self, is_open) -> None:
-        """Set state of this sensor."""
+    def _set_state_by_received_bytearray (self, received_bytearray) -> None:
+        """Set state of this sensor by received sensor value."""
+
+        is_open = None;
+        if received_bytearray.decode() == '\x00': # Opened
+            is_open = True
+        else: # Closed
+            is_open = False
 
         _LOGGER.debug('State of Mag %s has been changed to %s', self._mac_address, is_open)
 
