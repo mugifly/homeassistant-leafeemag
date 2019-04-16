@@ -116,6 +116,9 @@ class MagBinarySensor(BinarySensorDevice):
         # Update time
         self._last_connected_at = time.time()
 
+        # Disconnect from device if necessary
+        self._disconnect();
+
         # Initialize BLE adapter
         _LOGGER.debug('Initializing BLE adapter...')
 
@@ -159,6 +162,19 @@ class MagBinarySensor(BinarySensorDevice):
         # Done
         _LOGGER.info('Ready for detect changing: %s', self._mac_address)
         return True
+
+    def _disconnect(self) -> None:
+        """Disconnect from Mag."""
+
+        if (self._mag_device == None):
+            return
+
+        _LOGGER.debug('Disconnecting from Mag... %s', self._mac_address)
+
+        try:
+            self._mag_device.disconnect()
+        except Exception as error:
+            _LOGGER.debug('Error occurred during disconnecting: %s; However ignored.', error)
 
     def _set_state_by_received_bytearray (self, received_bytearray) -> None:
         """Set state of this sensor by received sensor value."""
