@@ -44,12 +44,15 @@ SENSOR_CHARACTERISTIC_UUID = '3c113000-c75c-50c4-1f1a-6789e2afde4e'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup platform."""
 
+    import pygatt
+    ble_adapter = pygatt.GATTToolBackend()
+
     mac_address = config[CONF_MAC]
 
     device_class = config.get(CONF_DEVICE_CLASS)
     name = config.get(CONF_NAME)
 
-    add_devices([MagBinarySensor(mac_address, device_class, name)])
+    add_devices([MagBinarySensor(ble_adapter, mac_address, device_class, name)])
 
 def _on_notification_received_from_mag(instance, handle, value) -> None:
     """This method will be called when the state of Mag changes."""
@@ -59,10 +62,11 @@ def _on_notification_received_from_mag(instance, handle, value) -> None:
 
 class MagBinarySensor(BinarySensorDevice):
 
-    def __init__(self, mac_address, device_class, name = None) -> None:
+    def __init__(self, ble_adapter, mac_address, device_class, name = None) -> None:
         """Initialzing binary sensor for Mag...."""
 
         # Initialize
+        self._ble_adapter = ble_adapter
         self._mac_address = mac_address.upper()
         self._device_class = device_class
         self._name = name if name != None else mac_address
@@ -115,36 +119,37 @@ class MagBinarySensor(BinarySensorDevice):
         # Initialize BLE adapter
         _LOGGER.debug('Initializing BLE adapter...')
 
-        import pygatt
-        ble_adapter = pygatt.GATTToolBackend()
-
         try:
-            ble_adapter.start(False)
+            self._ble_adapter.start(False)
         except Exception as error:
             _LOGGER.debug('Error occurred during initializing: %s; However ignored.', error)
 
         # Connect to device
         _LOGGER.debug('Connecting to Mag... %s', self._mac_address)
-
         self._mag_device = None
+
+        from pygatt import BLEAddressType
+
         try:
-            self._mag_device = ble_adapter.connect(self._mac_address, BLE_CONNECT_TIMEOUT_SEC, pygatt.BLEAddressType.public)
+            self._mag_device = self._ble_adapter.connect(self._mac_address, BLE_CONNECT_TIMEOUT_SEC, BLEAddressType.public)
         except Exception as error:
             _LOGGER.error('Error occurred during connecting to %s: %s; Waiting for retry...', self._mac_address, error)
             return False
 
         # Get latest state
         _LOGGER.debug('Getting latest state... %s', self._mac_address)
+
         try:
 
             value = self._mag_device.char_read('3c113000-c75c-50c4-1f1a-6789e2afde4e', BLE_READ_TIMEOUT_SEC)
             self._set_state_by_received_bytearray(value)
 
         except Exception as error:
-            _LOGGER.warning('Error occurred during getting latest state from %s: %s; However ignored.', self._mac_address, error)
+            _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._mac_address, error)
 
         # Subscribe to notifications for state changes
         _LOGGER.debug('Subscribing notification... %s', self._mac_address)
+
         try:
             self._mag_device.subscribe(SENSOR_CHARACTERISTIC_UUID, lambda handle, value: _on_notification_received_from_mag(self, handle, value))
         except Exception as error:
