@@ -75,7 +75,7 @@ class MagBinarySensor(BinarySensorDevice):
 
         # Scan and Subscribe
         self._mag_device = None
-        self._scan_and_subscribe()
+        self._connect_and_subscribe()
 
     @property
     def name(self) -> str:
@@ -102,16 +102,16 @@ class MagBinarySensor(BinarySensorDevice):
 
         if self._mag_device == None and CONNECT_ERROR_RETRY_INTERVAL_SEC < (time.time() - self._last_connected_at):
             # Retry connection
-            self._scan_and_subscribe()
+            self._connect_and_subscribe()
 
         elif self._mag_device != None and RECONNECT_INTERVAL_SEC < (time.time() - self._last_connected_at):
             # Reconnect after long time has passed (to keep reliability of connection)
-            self._scan_and_subscribe()
+            self._connect_and_subscribe()
 
         return
 
-    def _scan_and_subscribe(self) -> bool:
-        """Find Mag and Subscribe the notification service."""
+    def _connect_and_subscribe(self) -> bool:
+        """Connect to Mag and Subscribe the notification service."""
 
         # Update time
         self._last_connected_at = time.time()
