@@ -157,6 +157,7 @@ class MagBinarySensor(BinarySensorDevice):
             self._mag_device.subscribe(SENSOR_CHARACTERISTIC_UUID, lambda handle, value: _on_notification_received_from_mag(self, handle, value))
         except Exception as error:
             _LOGGER.error('Error occurred during subscribing with %s: %s; Waiting for retry...', self._mac_address, error)
+            self._disconnect()
             return False
 
         # Done
@@ -175,6 +176,8 @@ class MagBinarySensor(BinarySensorDevice):
             self._mag_device.disconnect()
         except Exception as error:
             _LOGGER.debug('Error occurred during disconnecting: %s; However ignored.', error)
+
+        self._mag_device = None
 
     def _set_state_by_received_bytearray (self, received_bytearray) -> None:
         """Set state of this sensor by received sensor value."""
