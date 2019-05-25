@@ -125,10 +125,10 @@ class MagBinarySensor(BinarySensorDevice):
         try:
             self._ble_adapter.start(False)
         except Exception as error:
-            _LOGGER.debug('Error occurred during initializing: %s; However ignored.', error)
+            _LOGGER.debug('Error occurred during initializing adapter: %s; However ignored.', error)
 
         # Connect to device
-        _LOGGER.debug('Connecting to Mag... %s', self._mac_address)
+        _LOGGER.debug('Connecting to Mag... %s', self._name)
         self._mag_device = None
 
         from pygatt import BLEAddressType
@@ -136,11 +136,11 @@ class MagBinarySensor(BinarySensorDevice):
         try:
             self._mag_device = self._ble_adapter.connect(self._mac_address, BLE_CONNECT_TIMEOUT_SEC, BLEAddressType.public)
         except Exception as error:
-            _LOGGER.error('Error occurred during connecting to %s: %s; Waiting for retry...', self._mac_address, error)
+            _LOGGER.error('Error occurred during connecting to %s: %s; Waiting for retry...', self._name, error)
             return False
 
         # Get latest state
-        _LOGGER.debug('Getting latest state... %s', self._mac_address)
+        _LOGGER.debug('Getting latest state... %s', self._name)
 
         try:
 
@@ -148,20 +148,20 @@ class MagBinarySensor(BinarySensorDevice):
             self._set_state_by_received_bytearray(value)
 
         except Exception as error:
-            _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._mac_address, error)
+            _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._name, error)
 
         # Subscribe to notifications for state changes
-        _LOGGER.debug('Subscribing notification... %s', self._mac_address)
+        _LOGGER.debug('Subscribing notification... %s', self._name)
 
         try:
             self._mag_device.subscribe(SENSOR_CHARACTERISTIC_UUID, lambda handle, value: _on_notification_received_from_mag(self, handle, value))
         except Exception as error:
-            _LOGGER.error('Error occurred during subscribing with %s: %s; Waiting for retry...', self._mac_address, error)
+            _LOGGER.error('Error occurred during subscribing with %s: %s; Waiting for retry...', self._name, error)
             self._disconnect()
             return False
 
         # Done
-        _LOGGER.info('Ready for detect changing: %s', self._mac_address)
+        _LOGGER.info('Ready for detect changing: %s', self._name)
         return True
 
     def _disconnect(self) -> None:
@@ -170,7 +170,7 @@ class MagBinarySensor(BinarySensorDevice):
         if (self._mag_device == None):
             return
 
-        _LOGGER.debug('Disconnecting from Mag... %s', self._mac_address)
+        _LOGGER.debug('Disconnecting from Mag... %s', self._name)
 
         try:
             self._mag_device.disconnect()
@@ -188,7 +188,7 @@ class MagBinarySensor(BinarySensorDevice):
         else: # Closed
             is_open = False
 
-        _LOGGER.debug('State of Mag %s has been changed to %s', self._mac_address, is_open)
+        _LOGGER.debug('State of Mag %s has been changed to %s', self._name, is_open)
 
         # Set state
         self._state = is_open
