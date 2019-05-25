@@ -41,6 +41,7 @@ BLE_READ_TIMEOUT_SEC = 5
 CONNECT_ERROR_RETRY_INTERVAL_SEC = 30
 PERIODIC_RECONNECT_INTERVAL_SEC = 7200
 SENSOR_CHARACTERISTIC_UUID = '3c113000-c75c-50c4-1f1a-6789e2afde4e'
+BATTERY_LEVEL_CHARACTERISTIC_UUID = '00002a19-0000-1000-8000-00805f9b34fb'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -163,7 +164,7 @@ class MagBinarySensor(BinarySensorDevice):
         _LOGGER.debug('Getting latest state... %s', self._name)
 
         try:
-            value = self._mag_device.char_read('3c113000-c75c-50c4-1f1a-6789e2afde4e', BLE_READ_TIMEOUT_SEC)
+            value = self._mag_device.char_read(SENSOR_CHARACTERISTIC_UUID, BLE_READ_TIMEOUT_SEC)
             self._set_state_by_received_bytearray(value)
         except Exception as error:
             _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._name, error)
@@ -172,7 +173,7 @@ class MagBinarySensor(BinarySensorDevice):
         _LOGGER.debug('Getting battery level... %s', self._name)
 
         try:
-            value = self._mag_device.char_read('00002a19-0000-1000-8000-00805f9b34fb', BLE_READ_TIMEOUT_SEC)
+            value = self._mag_device.char_read(BATTERY_LEVEL_CHARACTERISTIC_UUID, BLE_READ_TIMEOUT_SEC)
             self._battery_level = int(value.hex(), 16)
         except Exception as error:
             _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._name, error)
