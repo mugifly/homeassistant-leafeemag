@@ -94,6 +94,7 @@ logger:
   default: warning
   logs:
     custom_components.leafeemag.binary_sensor: debug
+    pygatt.backends.gatttool.gatttool: info
 ```
 
 After saving and restarting, then open the "Info" page of your Home Assistant (http://example.com/dev-info) on the browser, and click the "LOAD FULL HOME ASSISTANT LOG" button.
