@@ -14,7 +14,8 @@ import homeassistant.helpers.config_validation as cv
 # Import class for byte comparison
 import ast
 
-# Import class for interval check
+# Import class for wait and interval check
+import random
 import time
 
 # Import the logger for debugging
@@ -34,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _LOGGER = logging.getLogger(__name__)
 
 # Define constants
+INITIALIZATION_WAITING_MAX_SEC = 10 # Waiting 1-10 sec.
 BLE_CONNECT_TIMEOUT_SEC = 10
 BLE_READ_TIMEOUT_SEC = 5
 CONNECT_ERROR_RETRY_INTERVAL_SEC = 30
@@ -72,9 +74,12 @@ class MagBinarySensor(BinarySensorDevice):
         self._name = name if name != None else mac_address
         self._state = None
         self._last_connected_at = 0
-
-        # Scan and Subscribe
         self._mag_device = None
+
+        # Waiting for load reduction
+        time.sleep(1 + random.randrange(INITIALIZATION_WAITING_MAX_SEC))
+
+        # Connect to Mag
         self._connect_and_subscribe()
 
     @property
@@ -100,8 +105,12 @@ class MagBinarySensor(BinarySensorDevice):
     def update(self) -> None:
         """Not update the state in here, because the state will be updated by notification from the Mag."""
 
+        if self._mag_device == None and self._last_connected_at == 0:
+            # This device has not made a first connection yet
+            return
+
         if self._mag_device == None and CONNECT_ERROR_RETRY_INTERVAL_SEC < (time.time() - self._last_connected_at):
-            # Retry connection
+            # First or Retry connection
             self._connect_and_subscribe()
 
         elif self._mag_device != None and PERIODIC_RECONNECT_INTERVAL_SEC < (time.time() - self._last_connected_at):
@@ -138,16 +147,15 @@ class MagBinarySensor(BinarySensorDevice):
             self._mag_device = self._ble_adapter.connect(self._mac_address, BLE_CONNECT_TIMEOUT_SEC, BLEAddressType.public, AUTO_RECONNECT)
         except Exception as error:
             _LOGGER.error('Error occurred during connecting to %s: %s; Waiting for retry...', self._name, error)
+            self._disconnect();
             return False
 
         # Get latest state
         _LOGGER.debug('Getting latest state... %s', self._name)
 
         try:
-
             value = self._mag_device.char_read('3c113000-c75c-50c4-1f1a-6789e2afde4e', BLE_READ_TIMEOUT_SEC)
             self._set_state_by_received_bytearray(value)
-
         except Exception as error:
             _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._name, error)
 
