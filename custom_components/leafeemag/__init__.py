@@ -1,1 +1,1 @@
-"""The leafeemag component v1.2.0."""
+"""The leafeemag component v1.3.0."""
