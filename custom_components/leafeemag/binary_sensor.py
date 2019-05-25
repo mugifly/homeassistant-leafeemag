@@ -74,6 +74,7 @@ class MagBinarySensor(BinarySensorDevice):
         self._name = name if name != None else mac_address
         self._state = None
         self._last_connected_at = 0
+        self._battery_level = None
         self._mag_device = None
 
         # Waiting for load reduction
@@ -91,6 +92,14 @@ class MagBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the device class of this sensor."""
         return self._device_class
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return the attributes of this sensor."""
+        return {
+            "mac_address": self._mac_address,
+            "battery_level": self._battery_level
+        }
 
     @property
     def is_on(self) -> bool:
@@ -156,6 +165,15 @@ class MagBinarySensor(BinarySensorDevice):
         try:
             value = self._mag_device.char_read('3c113000-c75c-50c4-1f1a-6789e2afde4e', BLE_READ_TIMEOUT_SEC)
             self._set_state_by_received_bytearray(value)
+        except Exception as error:
+            _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._name, error)
+
+        # Get battery level
+        _LOGGER.debug('Getting battery level... %s', self._name)
+
+        try:
+            value = self._mag_device.char_read('00002a19-0000-1000-8000-00805f9b34fb', BLE_READ_TIMEOUT_SEC)
+            self._battery_level = int(value.hex(), 16)
         except Exception as error:
             _LOGGER.debug('Error occurred during getting latest state from %s: %s; However ignored.', self._name, error)
 
