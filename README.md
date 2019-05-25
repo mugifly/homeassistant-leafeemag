@@ -67,7 +67,7 @@ binary_sensor:
 
 * `scan_interval` (Optional)  -  Interval (seconds) to update the sensor status on Home Assistant. <br>NOTE: Regardless of this setting, reception of sensor status from leafee mag is performed in real-time via Notification system of BLE.
 
-Also it supports multiple sensors. I tested using 4 sensors.
+Also it supports multiple sensors. I tested with 5 sensors.
 
 ### 3. Restart Home Assistant
 
