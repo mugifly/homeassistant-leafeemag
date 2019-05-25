@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 BLE_CONNECT_TIMEOUT_SEC = 10
 BLE_READ_TIMEOUT_SEC = 5
 CONNECT_ERROR_RETRY_INTERVAL_SEC = 30
-RECONNECT_INTERVAL_SEC = 7200
+PERIODIC_RECONNECT_INTERVAL_SEC = 7200
 SENSOR_CHARACTERISTIC_UUID = '3c113000-c75c-50c4-1f1a-6789e2afde4e'
 
 
@@ -104,8 +104,8 @@ class MagBinarySensor(BinarySensorDevice):
             # Retry connection
             self._connect_and_subscribe()
 
-        elif self._mag_device != None and RECONNECT_INTERVAL_SEC < (time.time() - self._last_connected_at):
-            # Reconnect after long time has passed (to keep reliability of connection)
+        elif self._mag_device != None and PERIODIC_RECONNECT_INTERVAL_SEC < (time.time() - self._last_connected_at):
+            # Periodic Reconnect after long time has passed (to keep reliability of connection)
             self._connect_and_subscribe()
 
         return
@@ -134,7 +134,8 @@ class MagBinarySensor(BinarySensorDevice):
         from pygatt import BLEAddressType
 
         try:
-            self._mag_device = self._ble_adapter.connect(self._mac_address, BLE_CONNECT_TIMEOUT_SEC, BLEAddressType.public)
+            AUTO_RECONNECT = True
+            self._mag_device = self._ble_adapter.connect(self._mac_address, BLE_CONNECT_TIMEOUT_SEC, BLEAddressType.public, AUTO_RECONNECT)
         except Exception as error:
             _LOGGER.error('Error occurred during connecting to %s: %s; Waiting for retry...', self._name, error)
             return False
