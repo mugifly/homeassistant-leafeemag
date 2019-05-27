@@ -22,7 +22,7 @@ import time
 import logging
 
 # Define the required pypi package
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
+REQUIREMENTS = ['pygatt[GATTTOOL]==4.0.3']
 
 # Define the validation of configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
